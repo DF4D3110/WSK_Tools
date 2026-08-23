@@ -8,10 +8,10 @@
 
 调度系统 DISM 将 FFU 镜像释放到物理磁盘。
 
-- 启动时自动检测当前 DISM 是否支持 `/Apply-Ffu`
+- 启动时自动检测当前 DISM 是否支持 `/apply-ffu`
 - 自动枚举宿主机所有物理磁盘（含容量、型号、可访问性）
 - 文件对话框选择 FFU 镜像
-- 后台线程执行 DISM `/Apply-Ffu`，管道实时捕获输出并解析进度百分比
+- 后台线程执行 DISM `/apply-ffu`，管道实时捕获输出并解析进度百分比
 - 释放完成反馈成功 / 失败（含退出码与错误信息）
 - 管理员权限检测与提示
 
@@ -36,7 +36,7 @@
 |--------|------|----------|
 | WCOS 构建 | 调用 ImgGen 生成 FFU，支持自定义输出文件名（默认 `flash.ffu`），输出目录非空时即时提示另存为 | `imggen.cmd` |
 | 驱动注入 | 对已有 FFU/VHDX 注入驱动文件夹 | `imageapp.exe /Patch` |
-| CAB 注入 | 挂载 VHD 并安装 CAB 包 | `UpdateApp.exe mountandinstall` |
+| CAB 注入 | 挂载 VHD 并安装 CAB 包 | `UpdateApp.exe` |
 | BCD 编辑 | 勾选式配置调试端口、波特率、测试签名等启动项 | 系统 `bcdedit.exe` |
 
 ## 项目内容
@@ -48,7 +48,7 @@
 ## 编译要求
 
 - Visual Studio 2022（Community / Professional / Enterprise）
-- Windows 10 SDK（10.0.26100.0 或更高）
+- Windows 11 SDK（10.0.26100.0 或更高）
 - MSVC v143 工具集，C++17 标准
 
 ## 编译方法
