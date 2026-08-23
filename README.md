@@ -35,7 +35,7 @@
 | 选项卡 | 功能 | 调度工具 |
 |--------|------|----------|
 | WCOS 构建 | 调用 ImgGen 生成 FFU，支持自定义输出文件名（默认 `flash.ffu`），输出目录非空时即时提示另存为 | `imggen.cmd` |
-| 驱动注入 | 对已有 FFU/VHDX 注入驱动文件夹 | `imageapp.exe /Patch` |
+| 驱动注入 | 对已有 FFU/VHDX 注入驱动文件夹 | `imageapp.exe` |
 | CAB 注入 | 挂载 VHD 并安装 CAB 包 | `UpdateApp.exe` |
 | BCD 编辑 | 勾选式配置调试端口、波特率、测试签名等启动项 | 系统 `bcdedit.exe` |
 
