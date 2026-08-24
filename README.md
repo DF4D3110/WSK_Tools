@@ -135,3 +135,13 @@ WSK_Tools\
 - **WinStory 2026**
 - 网站：https://wiki.win-story.cn
 - 编译者：DF4D3110
+
+## 许可证
+
+本项目采用 **MIT License** 开源协议。详见 [LICENSE](LICENSE) 文件。
+
+本项目包含以下第三方开源项目的代码，均遵循其各自的 MIT License：
+
+- [Img2Ffu](https://github.com/MobileTooling/img2ffu) — Copyright (c) Gustave Monce
+- [StorageSpace](https://github.com/MobileTooling/StorageSpace) — Copyright (c) Gustave Monce
+- [LTRData.DiscUtils](https://github.com/LTRData/DiscUtils)
