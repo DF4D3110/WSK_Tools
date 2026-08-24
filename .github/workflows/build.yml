@@ -10,7 +10,6 @@ on:
 
 env:
   DOTNET_VERSION: '8.0.x'
-  SOLUTION: 'WSK_Tools.sln'
 
 jobs:
   build:
@@ -46,15 +45,59 @@ jobs:
         "cpp_platform=$cpp" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
         "dotnet_rid=$rid" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
         "out_name=$out" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+        Write-Host "C++ platform: $cpp"
+        Write-Host ".NET RID: $rid"
+        Write-Host "Output name: $out"
+
+    - name: Diagnostics - list repo structure
+      shell: pwsh
+      run: |
+        Write-Host "=== Repo root ==="
+        Get-ChildItem -Force | Select-Object Name, Mode | Format-Table -AutoSize
+        Write-Host "=== .vcxproj files ==="
+        Get-ChildItem -Recurse -Filter "*.vcxproj" | Select-Object FullName
+        Write-Host "=== .csproj files ==="
+        Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object FullName
+        Write-Host "=== MSBuild version ==="
+        msbuild -version
+
+    - name: Restore .NET packages
+      shell: pwsh
+      run: |
+        $tools = @("ffuview", "ffuinfo", "exttools")
+        foreach ($tool in $tools) {
+          if (Test-Path "$tool\$tool.csproj") {
+            Write-Host "Restoring $tool..."
+            dotnet restore "$tool\$tool.csproj"
+          }
+        }
 
     - name: Build C++ tools (ffuext)
-      run: msbuild ffuext\ffuext.vcxproj /p:Configuration=${{ matrix.config }} /p:Platform=${{ steps.archmap.outputs.cpp_platform }} /m /v:minimal
+      shell: pwsh
+      run: |
+        $plat = "${{ steps.archmap.outputs.cpp_platform }}"
+        $cfg = "${{ matrix.config }}"
+        Write-Host "Building ffuext ($cfg, $plat)..."
+        msbuild ffuext\ffuext.vcxproj /p:Configuration=$cfg /p:Platform=$plat /p:WindowsTargetPlatformVersion=10.0 /m /v:normal
+        if ($LASTEXITCODE -ne 0) { Write-Host "::warning::ffuext build failed with exit code $LASTEXITCODE" }
 
     - name: Build C++ tools (wsktool)
-      run: msbuild wsktool\wsktool.vcxproj /p:Configuration=${{ matrix.config }} /p:Platform=${{ steps.archmap.outputs.cpp_platform }} /m /v:minimal
+      shell: pwsh
+      run: |
+        $plat = "${{ steps.archmap.outputs.cpp_platform }}"
+        $cfg = "${{ matrix.config }}"
+        Write-Host "Building wsktool ($cfg, $plat)..."
+        msbuild wsktool\wsktool.vcxproj /p:Configuration=$cfg /p:Platform=$plat /p:WindowsTargetPlatformVersion=10.0 /m /v:normal
+        if ($LASTEXITCODE -ne 0) { Write-Host "::warning::wsktool build failed with exit code $LASTEXITCODE" }
 
     - name: Build C++ tools (wcosstagetool)
-      run: msbuild wcosstagetool\wcosstagetool.vcxproj /p:Configuration=${{ matrix.config }} /p:Platform=${{ steps.archmap.outputs.cpp_platform }} /m /v:minimal
+      shell: pwsh
+      run: |
+        $plat = "${{ steps.archmap.outputs.cpp_platform }}"
+        $cfg = "${{ matrix.config }}"
+        Write-Host "Building wcosstagetool ($cfg, $plat)..."
+        msbuild wcosstagetool\wcosstagetool.vcxproj /p:Configuration=$cfg /p:Platform=$plat /p:WindowsTargetPlatformVersion=10.0 /m /v:normal
+        if ($LASTEXITCODE -ne 0) { Write-Host "::warning::wcosstagetool build failed with exit code $LASTEXITCODE" }
 
     - name: Publish .NET tools (self-contained)
       shell: pwsh
@@ -64,8 +107,13 @@ jobs:
         $out = "build\${{ steps.archmap.outputs.out_name }}\$cfg"
         $tools = @("ffuview", "ffuinfo", "exttools")
         foreach ($tool in $tools) {
-          Write-Host "Publishing $tool ($cfg, $rid)..."
-          dotnet publish "$tool\$tool.csproj" -c $cfg -r $rid --self-contained true -o "$out\$tool"
+          if (Test-Path "$tool\$tool.csproj") {
+            Write-Host "Publishing $tool ($cfg, $rid)..."
+            dotnet publish "$tool\$tool.csproj" -c $cfg -r $rid --self-contained true -o "$out\$tool"
+            if ($LASTEXITCODE -ne 0) { Write-Host "::error::$tool publish failed" }
+          } else {
+            Write-Host "::warning::$tool.csproj not found"
+          }
         }
 
     - name: Assemble output package
@@ -74,28 +122,42 @@ jobs:
         $out = "build\${{ steps.archmap.outputs.out_name }}\${{ matrix.config }}"
         $plat = "${{ steps.archmap.outputs.cpp_platform }}"
         $cfg = "${{ matrix.config }}"
+        if (!(Test-Path $out)) { New-Item -ItemType Directory -Force -Path $out | Out-Null }
         $cppTools = @("ffuext", "wsktool", "wcosstagetool")
         foreach ($tool in $cppTools) {
           $exe = "$tool\bin\$plat\$cfg\$tool.exe"
-          if (Test-Path $exe) { Copy-Item $exe "$out\" -Force }
+          if (Test-Path $exe) {
+            Copy-Item $exe "$out\" -Force
+            Write-Host "Copied: $exe"
+          } else {
+            Write-Host "::warning::$exe not found"
+          }
           $pdb = "$tool\bin\$plat\$cfg\$tool.pdb"
           if (Test-Path $pdb) { Copy-Item $pdb "$out\" -Force }
         }
         if (Test-Path "language") {
           if (!(Test-Path "$out\language")) { New-Item -ItemType Directory -Force -Path "$out\language" | Out-Null }
           Copy-Item "language\*.dll" "$out\language\" -Force -ErrorAction SilentlyContinue
+          Write-Host "Copied language DLLs: $((Get-ChildItem "$out\language" -Filter '*.dll').Count)"
         }
         Copy-Item "LICENSE" "$out\" -Force -ErrorAction SilentlyContinue
         Copy-Item "README.md" "$out\" -Force -ErrorAction SilentlyContinue
+        Write-Host "=== Output contents ==="
+        Get-ChildItem $out -Recurse | Select-Object @{N='Path';E={$_.FullName.Replace((Get-Location).Path + '\', '')}}, @{N='SizeKB';E={if(!$_.PSIsContainer){[math]::Round($_.Length/1KB,1)}}} | Format-Table -AutoSize
 
     - name: Package as ZIP
       shell: pwsh
       run: |
         $out = "build\${{ steps.archmap.outputs.out_name }}\${{ matrix.config }}"
         $zip = "WSK_Tools_${{ steps.archmap.outputs.out_name }}_${{ matrix.config }}.zip"
-        Compress-Archive -Path "$out\*" -DestinationPath $zip -Force
-        Write-Host "Created: $zip"
-        Get-Item $zip | Select-Object Name, @{N='SizeMB';E={[math]::Round($_.Length/1MB,1)}}
+        if (Test-Path $out) {
+          Compress-Archive -Path "$out\*" -DestinationPath $zip -Force
+          Write-Host "Created: $zip"
+          Get-Item $zip | Select-Object Name, @{N='SizeMB';E={[math]::Round($_.Length/1MB,1)}}
+        } else {
+          Write-Host "::error::Output directory not found: $out"
+          exit 1
+        }
 
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
@@ -118,7 +180,8 @@ jobs:
         path: artifacts
 
     - name: List artifacts
-      run: ls -la artifacts/**/*.zip
+      run: |
+        find artifacts -name "*.zip" -exec ls -lh {} \;
 
     - name: Create Release
       uses: softprops/action-gh-release@v2
