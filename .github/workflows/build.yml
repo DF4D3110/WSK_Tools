@@ -73,30 +73,33 @@ jobs:
         }
 
     - name: Build C++ tools (ffuext)
+      continue-on-error: true
       shell: pwsh
       run: |
         $plat = "${{ steps.archmap.outputs.cpp_platform }}"
         $cfg = "${{ matrix.config }}"
         Write-Host "Building ffuext ($cfg, $plat)..."
-        msbuild ffuext\ffuext.vcxproj /p:Configuration=$cfg /p:Platform=$plat /p:WindowsTargetPlatformVersion=10.0 /m /v:normal
+        msbuild ffuext\ffuext.vcxproj /p:Configuration=$cfg /p:Platform=$plat /p:WindowsTargetPlatformVersion=10.0 /p:PlatformToolset=v180 /m /v:normal
         if ($LASTEXITCODE -ne 0) { Write-Host "::warning::ffuext build failed with exit code $LASTEXITCODE" }
 
     - name: Build C++ tools (wsktool)
+      continue-on-error: true
       shell: pwsh
       run: |
         $plat = "${{ steps.archmap.outputs.cpp_platform }}"
         $cfg = "${{ matrix.config }}"
         Write-Host "Building wsktool ($cfg, $plat)..."
-        msbuild wsktool\wsktool.vcxproj /p:Configuration=$cfg /p:Platform=$plat /p:WindowsTargetPlatformVersion=10.0 /m /v:normal
+        msbuild wsktool\wsktool.vcxproj /p:Configuration=$cfg /p:Platform=$plat /p:WindowsTargetPlatformVersion=10.0 /p:PlatformToolset=v180 /m /v:normal
         if ($LASTEXITCODE -ne 0) { Write-Host "::warning::wsktool build failed with exit code $LASTEXITCODE" }
 
     - name: Build C++ tools (wcosstagetool)
+      continue-on-error: true
       shell: pwsh
       run: |
         $plat = "${{ steps.archmap.outputs.cpp_platform }}"
         $cfg = "${{ matrix.config }}"
         Write-Host "Building wcosstagetool ($cfg, $plat)..."
-        msbuild wcosstagetool\wcosstagetool.vcxproj /p:Configuration=$cfg /p:Platform=$plat /p:WindowsTargetPlatformVersion=10.0 /m /v:normal
+        msbuild wcosstagetool\wcosstagetool.vcxproj /p:Configuration=$cfg /p:Platform=$plat /p:WindowsTargetPlatformVersion=10.0 /p:PlatformToolset=v180 /m /v:normal
         if ($LASTEXITCODE -ne 0) { Write-Host "::warning::wcosstagetool build failed with exit code $LASTEXITCODE" }
 
     - name: Publish .NET tools (self-contained)
