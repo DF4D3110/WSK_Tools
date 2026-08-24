@@ -1,0 +1,149 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  SOLUTION: 'WSK_Tools.sln'
+
+jobs:
+  build:
+    name: Build ${{ matrix.arch }} ${{ matrix.config }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86, x64, arm64]
+        config: [Release, Debug]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Map architecture variables
+      id: archmap
+      shell: pwsh
+      run: |
+        switch ("${{ matrix.arch }}") {
+          "x86"   { $cpp = "Win32"; $rid = "win-x86";   $out = "x86" }
+          "x64"   { $cpp = "x64";   $rid = "win-x64";   $out = "amd64" }
+          "arm64" { $cpp = "ARM64"; $rid = "win-arm64"; $out = "arm64" }
+        }
+        "cpp_platform=$cpp" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+        "dotnet_rid=$rid" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+        "out_name=$out" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+    - name: Build C++ tools (ffuext)
+      run: msbuild ffuext\ffuext.vcxproj /p:Configuration=${{ matrix.config }} /p:Platform=${{ steps.archmap.outputs.cpp_platform }} /m /v:minimal
+
+    - name: Build C++ tools (wsktool)
+      run: msbuild wsktool\wsktool.vcxproj /p:Configuration=${{ matrix.config }} /p:Platform=${{ steps.archmap.outputs.cpp_platform }} /m /v:minimal
+
+    - name: Build C++ tools (wcosstagetool)
+      run: msbuild wcosstagetool\wcosstagetool.vcxproj /p:Configuration=${{ matrix.config }} /p:Platform=${{ steps.archmap.outputs.cpp_platform }} /m /v:minimal
+
+    - name: Publish .NET tools (self-contained)
+      shell: pwsh
+      run: |
+        $rid = "${{ steps.archmap.outputs.dotnet_rid }}"
+        $cfg = "${{ matrix.config }}"
+        $out = "build\${{ steps.archmap.outputs.out_name }}\$cfg"
+        $tools = @("ffuview", "ffuinfo", "exttools")
+        foreach ($tool in $tools) {
+          Write-Host "Publishing $tool ($cfg, $rid)..."
+          dotnet publish "$tool\$tool.csproj" -c $cfg -r $rid --self-contained true -o "$out\$tool"
+        }
+
+    - name: Assemble output package
+      shell: pwsh
+      run: |
+        $out = "build\${{ steps.archmap.outputs.out_name }}\${{ matrix.config }}"
+        $plat = "${{ steps.archmap.outputs.cpp_platform }}"
+        $cfg = "${{ matrix.config }}"
+        $cppTools = @("ffuext", "wsktool", "wcosstagetool")
+        foreach ($tool in $cppTools) {
+          $exe = "$tool\bin\$plat\$cfg\$tool.exe"
+          if (Test-Path $exe) { Copy-Item $exe "$out\" -Force }
+          $pdb = "$tool\bin\$plat\$cfg\$tool.pdb"
+          if (Test-Path $pdb) { Copy-Item $pdb "$out\" -Force }
+        }
+        if (Test-Path "language") {
+          if (!(Test-Path "$out\language")) { New-Item -ItemType Directory -Force -Path "$out\language" | Out-Null }
+          Copy-Item "language\*.dll" "$out\language\" -Force -ErrorAction SilentlyContinue
+        }
+        Copy-Item "LICENSE" "$out\" -Force -ErrorAction SilentlyContinue
+        Copy-Item "README.md" "$out\" -Force -ErrorAction SilentlyContinue
+
+    - name: Package as ZIP
+      shell: pwsh
+      run: |
+        $out = "build\${{ steps.archmap.outputs.out_name }}\${{ matrix.config }}"
+        $zip = "WSK_Tools_${{ steps.archmap.outputs.out_name }}_${{ matrix.config }}.zip"
+        Compress-Archive -Path "$out\*" -DestinationPath $zip -Force
+        Write-Host "Created: $zip"
+        Get-Item $zip | Select-Object Name, @{N='SizeMB';E={[math]::Round($_.Length/1MB,1)}}
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: WSK_Tools_${{ steps.archmap.outputs.out_name }}_${{ matrix.config }}
+        path: WSK_Tools_${{ steps.archmap.outputs.out_name }}_${{ matrix.config }}.zip
+        retention-days: 30
+
+  release:
+    name: Create Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: List artifacts
+      run: ls -la artifacts/**/*.zip
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        name: WSK_Tools ${{ github.ref_name }}
+        body: |
+          ## WSK_Tools ${{ github.ref_name }}
+
+          支持架构：x86 / amd64 / arm64
+          配置：Release / Debug
+          .NET 工具为自包含部署，无需安装 .NET 运行时。
+
+          ### 包含工具
+          - **ffuext** — FFU 释放工具
+          - **wsktool** — WSK 构建工具
+          - **wcosstagetool** — WCOS 阶段工具
+          - **ffuview** — FFU 镜像分区与文件浏览器（GUI）
+          - **ffuinfo** — FFU 结构分析工具（命令行）
+          - **exttools** — FFU/VHDX 进阶诊断工具集（命令行）
+
+          ### 多语言
+          支持 6 种语言：简体中文、繁體中文、English、日本語、Русский、한국어
+
+          ### 许可证
+          MIT License
+        files: artifacts/**/*.zip
+        draft: false
+        prerelease: false
