@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon></ApplicationIcon>
+    <AssemblyName>ffuview</AssemblyName>
+    <RootNamespace>FFUView</RootNamespace>
+    <Version>2.0.0.0</Version>
+    <Company>WinStory 2026</Company>
+    <Product>WSK Tools</Product>
+    <Copyright>Copyright (C) 2026 WinStory</Copyright>
+    <Description>ffuview - FFU Image Viewer (powered by Img2Ffu)</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="LTRData.DiscUtils.Core" Version="1.0.51" />
+    <PackageReference Include="LTRData.DiscUtils.Ntfs" Version="1.0.51" />
+    <PackageReference Include="LTRData.DiscUtils.Fat" Version="1.0.51" />
+    <PackageReference Include="LTRData.DiscUtils.Vhdx" Version="1.0.51" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Img2Ffu.Library\Img2Ffu.Library.csproj" />
+    <ProjectReference Include="..\StorageSpace\StorageSpace.csproj" />
+  </ItemGroup>
+</Project>
