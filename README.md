@@ -48,7 +48,7 @@
 ## 编译要求
 
 - Visual Studio 2022（Community / Professional / Enterprise）
-- Windows 11 SDK（10.0.26100.0 或更高）
+- Windows 10 SDK（10.0.26100.0 或更高）
 - MSVC v143 工具集，C++17 标准
 
 ## 编译方法
@@ -76,13 +76,62 @@ WSK_Tools\
     └── language\        18 个语言 DLL（3 程序 × 6 语言）
 ```
 
+---
+
+## .NET 工具集（ffuview / ffuinfo / exttools）
+
+除上述 C++ 工具外，本项目还包含三个基于 .NET 8 的 FFU 分析工具：
+
+### ffuview — FFU 镜像分区与文件浏览器（GUI）
+
+图形化 FFU 镜像浏览器，支持不挂载、不释放直接查看 FFU 内容。
+
+- 支持所有 FFU 格式：V1（无压缩）、V1.1（压缩，DISM 默认）、V2（多 Store）
+- 列出 GPT 分区表（分区名、类型 GUID、LBA、大小、文件系统）
+- 直接浏览 NTFS / FAT32 分区文件系统，树形目录 + 文件列表
+- **OSPool / Storage Spaces 支持**：解析 Windows Core OS / Andromeda OS 的 OSPool 分区，列出内部虚拟磁盘并深入浏览其分区和文件系统（含 slab 块映射磁盘）
+
+### ffuinfo — FFU 结构分析工具（命令行）
+
+命令行 FFU 镜像结构分析工具。输出 FFU 头部信息、Store 列表、每个 Store 的磁盘几何信息、分区表（含分区名、类型、LBA、大小、文件系统检测），以及 OSPool 深度分析。
+
+### exttools — FFU/VHDX 进阶诊断工具集（命令行，默认不编译）
+
+进阶 FFU/VHDX 诊断工具集，用于深度分析和逆向调试。包含以下子命令：
+
+| 命令 | 说明 |
+|------|------|
+| `broadscan` | 广泛签名扫描（GPT/NTFS/FAT/SPACEDB/SDBB/SDBC） |
+| `btreedump` | Dump OSPool 所有 SDBB B-tree 条目、Volume、Slab 分配 |
+| `ospooldiag` | OSPool 结构诊断（SPACEDB 头、各类条目统计） |
+| `ospooldump` | OSPool 完整 dump（所有虚拟磁盘及分区） |
+| `ospoolscan` | 扫描 FFU 中所有 OSPool 分区 |
+| `ospoolpartdiag` | OSPool 虚拟磁盘分区详细诊断 |
+| `vhxddump` | VHDX 文件头部和元数据 dump |
+| `diag2` | 通用 FFU 诊断（头部、Store、分区表） |
+
+> exttools 默认不在解决方案中编译，需在 Visual Studio 配置管理器中手动勾选，或使用 `dotnet build Source\exttools\exttools.csproj -c Release`。
+
+## 多语言支持
+
+本项目所有工具均支持多语言：
+
+- **C++ 工具**（ffuext / wsktool / wcosstagetool）：语言文件以独立 DLL 形式存放于 `language\` 目录，运行时通过菜单栏切换。支持 6 种语言：简体中文（zh-cn）、繁體中文（zh-tw）、English（en-us）、日本語（ja-jp）、Русский（ru-ru）、한국어（ko-kr）。
+- **ffuview**：菜单栏新增"语言"菜单，6 种语言可即时切换，切换后更新标题、菜单、工具栏按钮文本。
+- **ffuinfo / exttools**：默认中文输出，通过 `-l` 或 `-language` 选项指定输出语言。
+  - 用法示例：`ffuinfo file.ffu -l en-us`
+  - 用法示例：`exttools diag2 file.ffu -l ja-jp`
+
+## 开源致谢
+
+本项目的 .NET 工具集成了以下开源项目的代码（均已包含在 `Source\` 目录中）：
+
+- **[Img2Ffu](https://github.com/MobileTooling/img2ffu)** — FFU 读取/写入库，作者 Gustave Monce (gus33000)，MIT License。提供 `FullFlashUpdateReaderStream`，自动处理所有 FFU 格式（V1/V1.1/V2）的解析和解压。
+- **[StorageSpace](https://github.com/MobileTooling/StorageSpace)** — Windows Storage Spaces / OSPool 解析库，作者 Gustave Monce (gus33000)，MIT License。提供 SPACEDB/SDBC/SDBB B-tree 解析和 slab 块映射 Stream，支持 Windows Core OS / Andromeda OS 的 OSPool 虚拟磁盘浏览。
+- **[LTRData.DiscUtils](https://github.com/LTRData/DiscUtils)** — .NET 磁盘工具库，MIT License。提供 GPT 分区表解析和 NTFS/FAT32 文件系统读取。
+
 ## 组织信息
 
 - **WinStory 2026**
 - 网站：https://wiki.win-story.cn
 - 编译者：DF4D3110
-
-## 额外声明
-
-部分内容已经经过调整，可能存在异常情况，如果您遇到了异常情况，请到issues反馈，感谢您对本工具的支持！
-如果你有什么想法或者希望引入的功能也可以在issues反馈！
