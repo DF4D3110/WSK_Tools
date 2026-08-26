@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using DiscUtils;
 using DiscUtils.Streams;
 using DiscUtils.Ntfs;
@@ -68,7 +68,10 @@ class Program
 
     static void PrintUsage()
     {
-        Console.WriteLine("exttools - " + Lang.Get("UsageDesc").Replace("FFU", "FFU/VHDX"));
+        Console.WriteLine("exttools - WSK Tools v1.0.4 Preview Build 260826");
+        Console.WriteLine("⚠ 测试版本 — 部分功能可能存在无法正常工作");
+        Console.WriteLine();
+        Console.WriteLine(Lang.Get("UsageDesc").Replace("FFU", "FFU/VHDX"));
         Console.WriteLine(Lang.Get("Usage").Replace("ffuinfo", "exttools <command>").Replace("<ffu文件路径>", "<file_path>"));
         Console.WriteLine("Commands:");
         Console.WriteLine("  broadscan       - Broad signature scan (GPT/NTFS/FAT/SPACEDB/SDBB)");
@@ -82,6 +85,7 @@ class Program
         Console.WriteLine(Lang.Get("LangOption"));
         Console.WriteLine();
         Console.WriteLine("WinStory 2026 - https://wiki.win-story.cn");
+        Console.WriteLine("Compiled by DF4D3110");
     }
 
     static void BroadScan(string path)

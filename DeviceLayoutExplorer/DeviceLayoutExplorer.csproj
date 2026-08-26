@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>DeviceLayoutExplorer</AssemblyName>
+    <RootNamespace>DeviceLayoutExchanger</RootNamespace>
+    <Version>1.0.4</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="LTRData.DiscUtils.Core" Version="1.0.51" />
+    <PackageReference Include="LTRData.DiscUtils.Ntfs" Version="1.0.51" />
+    <PackageReference Include="LTRData.DiscUtils.Fat" Version="1.0.51" />
+    <PackageReference Include="LTRData.DiscUtils.Vhd" Version="1.0.51" />
+    <PackageReference Include="LTRData.DiscUtils.Vhdx" Version="1.0.51" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\dl2vhd\DeviceLayoutParser.cs" Link="DeviceLayoutParser.cs" />
+    <Compile Include="..\dl2vhd\VhdCreator.cs" Link="VhdCreator.cs" />
+    <Compile Include="..\dl2vhd\GptManager.cs" Link="GptManager.cs" />
+    <Compile Include="..\dl2vhd\NativeStoragePoolCreator.cs" Link="NativeStoragePoolCreator.cs" />
+    <Compile Include="..\dl2vhd\DeviceLayoutVhdCreator17704.cs" Link="DeviceLayoutVhdCreator17704.cs" />
+    <Compile Include="..\dl2vhd\DeviceLayoutVhdCreator18963.cs" Link="DeviceLayoutVhdCreator18963.cs" />
+  </ItemGroup>
+  </Project>
+

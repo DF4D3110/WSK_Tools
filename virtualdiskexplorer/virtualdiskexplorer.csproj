@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <AssemblyName>virtualdiskexplorer</AssemblyName>
+    <RootNamespace>VirtualDiskExplorer</RootNamespace>
+    <Version>1.0.2</Version>
+    <Company>WinStory 2026</Company>
+    <Product>WSK Tools</Product>
+    <Copyright>Copyright (C) 2026 WinStory</Copyright>
+    <Description>Virtual Disk Explorer - browse VHD/VHDX/VMDK/VDI/QCOW2 disks</Description>
+    <ApplicationIcon></ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="LTRData.DiscUtils.Core" Version="1.0.51" />
+    <PackageReference Include="LTRData.DiscUtils.Ntfs" Version="1.0.51" />
+    <PackageReference Include="LTRData.DiscUtils.Fat" Version="1.0.51" />
+    <PackageReference Include="LTRData.DiscUtils.Vhd" Version="1.0.51" />
+    <PackageReference Include="LTRData.DiscUtils.Vhdx" Version="1.0.51" />
+    <PackageReference Include="LTRData.DiscUtils.Vmdk" Version="1.0.51" />
+    <PackageReference Include="LTRData.DiscUtils.Vdi" Version="1.0.51" />
+  </ItemGroup>
+</Project>

@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using DiscUtils;
 using DiscUtils.Ntfs;
 using DiscUtils.Fat;
@@ -15,11 +15,15 @@ class Program
     {
         if (args.Length == 0)
         {
+            Console.WriteLine("FFUInfo - WSK Tools v1.0.4 Preview Build 260826");
+            Console.WriteLine("⚠ 测试版本 — 部分功能可能存在无法正常工作");
+            Console.WriteLine();
             Console.WriteLine(Lang.Get("Usage"));
             Console.WriteLine(Lang.Get("UsageDesc"));
             Console.WriteLine(Lang.Get("LangOption"));
             Console.WriteLine();
             Console.WriteLine("WinStory 2026 - https://wiki.win-story.cn");
+            Console.WriteLine("Compiled by DF4D3110");
             return;
         }
 

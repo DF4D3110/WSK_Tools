@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>wcosstagetool</AssemblyName>
+    <RootNamespace>WcosStageTool</RootNamespace>
+    <Version>1.0.4</Version>
+    <Company>WinStory 2026</Company>
+    <Product>WSK Tools</Product>
+    <Copyright>Copyright (C) 2026 WinStory</Copyright>
+    <Description>wcosstagetool - WCOS构建与镜像后期处理工具</Description>
+  </PropertyGroup>
+  <Target Name="CopyAdkAfterPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <AdkFiles Include="E:\WSK_Tools\ADK\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AdkFiles)" DestinationFiles="@(AdkFiles->'$(PublishDir)\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Message Text="ADK copied to $(PublishDir)" Importance="high" />
+  </Target>
+</Project>
